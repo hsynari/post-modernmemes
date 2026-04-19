@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>POSTMODERNMEMEler 🏗️</title>
+
+<!-- Firebase 8 compat -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+:root{
+  --bg:#f0ebe0;
+  --ink:#111;
+  --red:#cc0033;
+  --syne:'Syne',sans-serif;
+  --mono:'Courier Prime',monospace;
+  --border:2.5px solid #111;
+  --sh:5px 5px 0 #111;
+  --sh-sm:3px 3px 0 #111;
+}
+
+body{
+  background:var(--bg);
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 39px,#d4cfc4 39px,#d4cfc4 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,#d4cfc4 39px,#d4cfc4 40px);
+  font-family:var(--mono);
+  min-height:100dvh;
+  color:var(--ink);
+}
+
+#app{
+  max-width:480px;
+  margin:0 auto;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px 16px 40px;
+  gap:18px;
+}
+
+/* ── LOGO ── */
+.logo{
+  font-family:var(--syne);
+  font-size:36px;
+  font-weight:800;
+  letter-spacing:-2px;
+  line-height:0.9;
+  text-align:center;
+}
+.logo span{color:var(--red)}
+.tagline{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#888;text-align:center}
+
+/* ── PANEL ── */
+.panel{
+  width:100%;
+  background:#fff;
+  border:var(--border);
+  box-shadow:var(--sh);
+  border-radius:4px;
+  padding:20px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* ── INPUTS ── */
+.inp{
+  width:100%;
+  font-family:var(--mono);
+  font-size:15px;
+  padding:12px 14px;
+  border:var(--border);
+  background:var(--bg);
+  border-radius:3px;
+  outline:none;
+}
+.inp:focus{outline:2px solid var(--red);outline-offset:2px}
+.code-inp{
+  text-transform:uppercase;
+  letter-spacing:8px;
+  text-align:center;
+  font-size:22px;
+  font-weight:700;
+  font-family:var(--syne);
+}
+
+/* ── BUTTONS ── */
+.btn{
+  font-family:var(--syne);
+  font-weight:800;
+  font-size:13px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  padding:13px 24px;
+  border:var(--border);
+  box-shadow:var(--sh);
+  border-radius:3px;
+  cursor:pointer;
+  transition:transform .1s,box-shadow .1s;
+  width:100%;
+}
+.btn:active:not(:disabled){transform:translate(2px,2px);box-shadow:2px 2px 0 #111}
+.btn:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:6px 6px 0 #111}
+.btn:disabled{background:#ccc!important;cursor:not-allowed;color:#888;box-shadow:none;transform:none}
+.btn.red{background:var(--red);color:#fff}
+.btn.dark{background:var(--ink);color:var(--bg)}
+.btn.sm{font-size:11px;padding:8px 16px;width:auto;align-self:center}
+
+.or{text-align:center;font-size:12px;color:#aaa;letter-spacing:2px}
+.err{color:var(--red);font-size:12px;min-height:16px;text-align:center}
+.foot{font-size:10px;letter-spacing:2px;color:#aaa;text-align:center}
+
+/* ── CODE BOX ── */
+.code-box{
+  width:100%;
+  border:3px solid var(--ink);
+  box-shadow:var(--sh);
+  border-radius:4px;
+  padding:20px;
+  text-align:center;
+  background:#fff;
+}
+.code-lbl{font-family:var(--syne);font-size:10px;font-weight:700;letter-spacing:4px;color:#888;text-transform:uppercase}
+.code-val{
+  font-family:var(--syne);
+  font-size:52px;
+  font-weight:800;
+  letter-spacing:6px;
+  color:var(--red);
+  line-height:1.1;
+}
+.code-hint{font-size:11px;color:#aaa;letter-spacing:1px;margin-top:4px}
+
+/* ── PLAYER ROWS ── */
+.player-row{display:flex;align-items:center;gap:10px;font-size:14px;padding:6px 0;border-bottom:1px solid #eee}
+.player-row:last-child{border-bottom:none}
+.player-row.me{font-weight:700}
+.dot{width:10px;height:10px;border-radius:50%;background:#ccc;border:1.5px solid #888;flex-shrink:0}
+.dot.mine{background:var(--red);border-color:var(--red)}
+.me-tag{font-size:11px;color:#888;margin-left:auto}
+.pts{margin-left:auto;font-weight:700;font-family:var(--syne)}
+
+/* ── SECTION LABEL ── */
+.sec-lbl{
+  font-family:var(--syne);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:#888;
+  width:100%;
+}
+
+/* ── GAME HEADER ── */
+.hdr{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:var(--border);
+  padding-bottom:10px;
+}
+.round-tag{
+  font-family:var(--syne);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:3px;
+  background:var(--ink);
+  color:var(--bg);
+  padding:4px 10px;
+  border-radius:2px;
+}
+.czar-tag{font-size:12px;font-weight:700;letter-spacing:1px}
+
+/* ── BLACK CARD ── */
+.black-card{
+  width:100%;
+  border-radius:6px;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  border:var(--border);
+  box-shadow:var(--sh);
+  color:#f0ebe0;
+}
+.bc-year{font-family:var(--syne);font-size:10px;font-weight:700;letter-spacing:4px;opacity:0.5}
+.bc-emoji{font-size:36px;line-height:1}
+.bc-title{font-family:var(--syne);font-size:22px;font-weight:800;line-height:1.1}
+.bc-prompt{font-size:13px;line-height:1.7;opacity:0.85}
+
+/* ── WHITE CARDS ── */
+.hand{
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.white-card{
+  width:100%;
+  border-radius:5px;
+  padding:16px;
+  border:var(--border);
+  box-shadow:var(--sh-sm);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  transition:transform .15s,box-shadow .15s;
+  position:relative;
+}
+.white-card.clickable{cursor:pointer}
+.white-card.clickable:hover{transform:translateY(-4px) rotate(-0.5deg);box-shadow:var(--sh)}
+.white-card.clickable:active{transform:translate(2px,2px);box-shadow:1px 1px 0 #111}
+.c-emoji{font-size:26px;line-height:1}
+.c-name{font-family:var(--syne);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.c-text{font-size:13px;line-height:1.6;font-style:italic}
+.pick-hint{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  font-family:var(--syne);font-size:11px;font-weight:700;
+  color:var(--red);letter-spacing:2px;
+}
+
+/* ── SCORES ── */
+.scores{
+  width:100%;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.score-chip{
+  border:var(--border);
+  border-radius:4px;
+  padding:8px 10px;
+  text-align:center;
+  min-width:70px;
+  background:#fff;
+  position:relative;
+}
+.score-chip.me{background:#fff5cc}
+.score-chip.czar{border-color:var(--red);box-shadow:2px 2px 0 var(--red)}
+.sc-name{font-size:10px;letter-spacing:1px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-pts{font-family:var(--syne);font-size:22px;font-weight:800;line-height:1}
+.sc-czar{position:absolute;top:-8px;right:-8px;font-size:14px}
+
+/* ── PROGRESS ── */
+.prog{width:100%;height:6px;background:#ddd;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--red);border-radius:3px;transition:width .3s}
+
+/* ── MISC ── */
+.wait-msg{font-size:13px;color:#666;text-align:center;line-height:1.7}
+.result-banner{
+  font-family:var(--syne);
+  font-size:28px;
+  font-weight:800;
+  text-align:center;
+  color:var(--red);
+  border:3px solid var(--red);
+  box-shadow:5px 5px 0 var(--red);
+  border-radius:4px;
+  padding:16px;
+  width:100%;
+}
+.emoji-row{display:flex;gap:12px;justify-content:center;font-size:32px;padding:12px 0}
+.played-tag{
+  font-family:var(--syne);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:#fff;
+  background:#006633;
+  padding:3px 8px;
+  border-radius:2px;
+  align-self:flex-start;
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+//  ⚠️  FIREBASE CONFIG — bunu kendi config ile değiştir!
+//  console.firebase.google.com → Yeni Proje → Realtime Database
+//  → Test modunda başlat → Proje Ayarları → Config kopyala
+// ════════════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyAwuuoVh-ZqFNRrlTphRWfS8TlRfy3j6_k",
+  authDomain:        "postmodern-memes.firebaseapp.com",
+  databaseURL:       "https://postmodern-memes-default-rtdb.firebaseio.com",
+  projectId:         "postmodern-memes",
+  storageBucket:     "postmodern-memes.firebasestorage.app",
+  messagingSenderId: "451211688834",
+  appId:             "1:451211688834:web:71007966eef198eedcad9b"
+};
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+// ════════════════════════════════════════════════════════════
+//  KART VERİSİ
+// ════════════════════════════════════════════════════════════
+const BLACK_CARDS = [
+  { id:"b1", emoji:"💥", year:"1972", title:"Pruitt-Igoe Yıkılıyor",
+    prompt:"Modernizmin ölüm tarihi olarak kabul edildi. Televizyonlar canlı yayında. Mimarlık tarihçisi olarak bu ana tepkiniz nedir?",
+    color:"#1a1a1a" },
+  { id:"b2", emoji:"🪑", year:"1984", title:"AT&T Binası Chippendale Detayı",
+    prompt:"Philip Johnson gökdelen tepesine rokoko motifi yerleştiriyor. Yanında oturuyorsunuz. Söyleyecekleriniz?",
+    color:"#0d0d2b" },
+  { id:"b3", emoji:"🎰", year:"1972", title:"Learning from Las Vegas",
+    prompt:"Venturi bu neon cehennemi mimarlığın geleceği olarak sunuyor. Eleştiri sırası size geldi.",
+    color:"#1a0a00" },
+  { id:"b4", emoji:"🏭", year:"1923", title:'"Ev bir yaşama makinesidir"',
+    prompt:"Le Corbusier'nin manifestosu önünüzde. Pencereden güneş girmiyor. Yanıtınız?",
+    color:"#001a00" },
+  { id:"b5", emoji:"✨", year:"1997", title:"Guggenheim Bilbao Açılıyor",
+    prompt:"Titanium yüzeyler kamerayı yanıltıyor. Bu mimarlık mı, heykel mi, marka mı?",
+    color:"#1a001a" },
+  { id:"b6", emoji:"📢", year:"1977", title:"Jencks Manifestosu",
+    prompt:"Modern mimarinin öldüğünü ilan ediyor. Slaytlar geçiyor, Pruitt-Igoe loop'ta. Siz de kürsüdesiniz. Ne diyeceksiniz?",
+    color:"#0d0a00" },
+];
+
+const WHITE_CARDS = [
+  { id:"w1",  emoji:"😭", name:"Üzgün Mies",          text:'"Less is... yeterli değilmiş demek."',                  color:"#e8e8e8", accent:"#222" },
+  { id:"w2",  emoji:"🤌", name:"Zafer Venturi",        text:'"Ben söylemiştim! Complexity AND Contradiction!"',       color:"#fff5cc", accent:"#c8a000" },
+  { id:"w3",  emoji:"🔥", name:"Yanmış Le Corbusier",  text:'"Bu benim makinem değil. Bu bir kâbus."',                color:"#ffeecc", accent:"#cc4400" },
+  { id:"w4",  emoji:"😈", name:"Philip Johnson",       text:'"Her iki tarafta da zaten benim imzam var."',            color:"#eeeeff", accent:"#3300cc" },
+  { id:"w5",  emoji:"📝", name:"Jencks Not Alıyor",    text:'"Bunu da kitaba yazıyorum. Baskı tarihi: Yarın."',       color:"#eeffee", accent:"#006600" },
+  { id:"w6",  emoji:"🌀", name:"Koolhaas",             text:'"Junkspace intensifies."',                               color:"#f0e8ff", accent:"#6600cc" },
+  { id:"w7",  emoji:"🏆", name:"Zaha Hadid",           text:'"Eğrilik her şeyi çözer. Siz de eğilin biraz."',         color:"#e8f8ff", accent:"#0055cc" },
+  { id:"w8",  emoji:"👁️", name:"Derrida",              text:'"Mimarlık metnin kendisidir. Önce dekonstüre edin."',    color:"#fff0f5", accent:"#cc0055" },
+  { id:"w9",  emoji:"🤷", name:"Anonim Müşteri",       text:'"Ben sadece üç oda bir salon istedim."',                 color:"#f5f5f0", accent:"#555544" },
+  { id:"w10", emoji:"📸", name:"Instagramcı",          text:'"Aesthetic. 47K likes. Mimarlık bu mu? Evet."',          color:"#fff0ee", accent:"#cc3300" },
+  { id:"w11", emoji:"🧱", name:"İmar Müdürü",          text:'"Ruhsat yok. Yıkım kararı çıktı. Postmodern olsanız da."', color:"#f0f0e8", accent:"#444400" },
+  { id:"w12", emoji:"🎭", name:"Venturi'nin Annesi",   text:'"Robert bu evi bana yaptı. Komşular hâlâ anlayamadı."', color:"#fff5f0", accent:"#cc6600" },
+  { id:"w13", emoji:"🏛️", name:"Klasikçi Stern",       text:'"Sütun her çağda geçerlidir. İşte çözüm."',             color:"#f0f0ff", accent:"#330099" },
+  { id:"w14", emoji:"🌈", name:"Memphis Ekibi",        text:'"Daha fazla renk! Daha fazla motif! Daha fazla her şey!"', color:"#fff5ee", accent:"#ff4400" },
+  { id:"w15", emoji:"🤖", name:"Starchitect",          text:'"Benim imzam varsa mimarlıktır. Yoksa değildir."',       color:"#e8ffe8", accent:"#005500" },
+  { id:"w16", emoji:"📐", name:"Düz Çizgi Modernisti", text:'"Bu saçmalık bitmeli. Form follows function. Nokta."',   color:"#eeeeee", accent:"#333333" },
+  { id:"w17", emoji:"🎪", name:"Pompidou Ziyaretçisi", text:'"Boruları içe alsalarmış olmaz mıydı?"',                 color:"#fff8e8", accent:"#aa6600" },
+  { id:"w18", emoji:"🪴", name:"Bofill",               text:'"Postmodern ama epik ölçekte. Küçük düşünemezsiniz."',   color:"#eefff0", accent:"#005533" },
+  { id:"w19", emoji:"💤", name:"Jüri Üyesi",           text:'"Anlattınız ama... yine de anlamadım."',                 color:"#f8f8f8", accent:"#666666" },
+  { id:"w20", emoji:"🎓", name:"5. Yıl Öğrencisi",    text:'"Bunu jüride nasıl anlatacağım ya."',                    color:"#fff0ff", accent:"#880088" },
+];
+
+// ════════════════════════════════════════════════════════════
+//  PLAYER KİMLİĞİ
+// ════════════════════════════════════════════════════════════
+const MY_ID = (() => {
+  let id = sessionStorage.getItem('pm_id');
+  if (!id) { id = Math.random().toString(36).substr(2, 9); sessionStorage.setItem('pm_id', id); }
+  return id;
+})();
+
+// ════════════════════════════════════════════════════════════
+//  UYGULAMA STATE
+// ════════════════════════════════════════════════════════════
+let myName = sessionStorage.getItem('pm_name') || '';
+let roomCode = sessionStorage.getItem('pm_room') || '';
+let room = null;
+let roomRef = null;
+
+// ════════════════════════════════════════════════════════════
+//  YARDIMCI FONKSİYONLAR
+// ════════════════════════════════════════════════════════════
+const rr = path => db.ref('rooms/' + roomCode + (path ? '/' + path : ''));
+const arr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+const shuffle = a => {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) {
+    const j = 0 | Math.random() * (i + 1);
+    [b[i], b[j]] = [b[j], b[i]];
+  }
+  return b;
+};
+const isCzar  = (r = room) => r?.order && arr(r.order)[r.czarIdx] === MY_ID;
+const isHost  = (r = room) => r?.order && arr(r.order)[0] === MY_ID;
+const czarId  = (r = room) => r?.order && arr(r.order)[r.czarIdx];
+const czarName = (r = room) => r?.players?.[czarId(r)]?.name || '?';
+const nonCzarIds = (r = room) => arr(r?.order || []).filter((_, i) => i !== r.czarIdx);
+const genCode = () => {
+  const c = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return [0,1,2,3].map(() => c[0 | Math.random() * c.length]).join('');
+};
+
+// ════════════════════════════════════════════════════════════
+//  OYUN AKSİYONLARI
+// ════════════════════════════════════════════════════════════
+
+async function createRoom() {
+  const name = document.getElementById('nameInput')?.value?.trim();
+  if (!name) { showErr('Adınızı girin!'); return; }
+  myName = name;
+  sessionStorage.setItem('pm_name', name);
+
+  const code = genCode();
+  roomCode = code;
+  sessionStorage.setItem('pm_room', code);
+
+  await db.ref('rooms/' + code).set({
+    state: 'waiting',
+    players: { [MY_ID]: { name, score: 0 } },
+    order: [MY_ID],
+    czarIdx: 0,
+    round: 1,
+    createdAt: Date.now(),
+  });
+  listenRoom();
+}
+
+async function joinRoom() {
+  const name = document.getElementById('nameInput')?.value?.trim();
+  const code = (document.getElementById('codeInput')?.value || '').trim().toUpperCase();
+  if (!name) { showErr('Adınızı girin!'); return; }
+  if (code.length !== 4) { showErr('4 harfli oda kodunu girin!'); return; }
+
+  myName = name;
+  roomCode = code;
+  sessionStorage.setItem('pm_name', name);
+  sessionStorage.setItem('pm_room', code);
+
+  const snap = await db.ref('rooms/' + code).once('value');
+  if (!snap.exists()) { showErr('Oda bulunamadı! Kodu kontrol et.'); roomCode=''; return; }
+
+  const r = snap.val();
+  if (r.state !== 'waiting') { showErr('Oyun zaten başlamış!'); roomCode=''; return; }
+  const playerCount = Object.keys(r.players || {}).length;
+  if (playerCount >= 4) { showErr('Oda dolu (max 4 kişi)!'); roomCode=''; return; }
+
+  const newOrder = [...arr(r.order), MY_ID];
+  await db.ref('rooms/' + code).update({
+    ['players/' + MY_ID]: { name, score: 0 },
+    order: newOrder,
+  });
+  listenRoom();
+}
+
+async function startGame() {
+  const r = room;
+  const pids = arr(r.order);
+  const hands = {};
+  pids.forEach(pid => { hands[pid] = shuffle([...WHITE_CARDS]).slice(0, 5); });
+  const blackCard = shuffle([...BLACK_CARDS])[0];
+
+  await rr().update({
+    state: 'playing',
+    hands,
+    blackCard,
+    played: null,
+    revealed: null,
+    revealLock: null,
+    roundLock: null,
+    winner: null,
+    winnerName: null,
+    round: 1,
+    usedBlacks: [blackCard.id],
+  });
+}
+
+async function submitCard(cardId) {
+  const r = room;
+  if (isCzar(r)) return;
+  if (r.played?.[MY_ID]) return;
+
+  const hand = arr(r.hands?.[MY_ID]);
+  const card = hand.find(c => c.id === cardId);
+  if (!card) return;
+
+  // Replace card in hand
+  const newHand = hand.filter(c => c.id !== cardId);
+  const usedIds = new Set(newHand.map(c => c.id));
+  const pool = WHITE_CARDS.filter(c => !usedIds.has(c.id));
+  const replacement = pool.length
+    ? pool[0 | Math.random() * pool.length]
+    : WHITE_CARDS[0 | Math.random() * WHITE_CARDS.length];
+  newHand.push(replacement);
+
+  await rr().update({
+    ['played/' + MY_ID]: card,
+    ['hands/' + MY_ID]: newHand,
+  });
+}
+
+async function revealAll() {
+  // revealLock: tek bir client'ın açıklamayı yapmasını garanti eder
+  await rr('revealLock').transaction(v => {
+    if (v !== null && v !== undefined) return; // abort — başkası yaptı
+    return Date.now();
+  }, async (err, committed) => {
+    if (!committed || err) return;
+
+    const r = room;
+    const ncs = nonCzarIds(r);
+    const entries = ncs.map(pid => ({ card: r.played[pid], playerId: pid }));
+    const shuffled = shuffle(entries);
+    const revObj = {};
+    shuffled.forEach((e, i) => { revObj[i] = e; });
+
+    await rr().update({ revealed: revObj, state: 'judging' });
+  });
+}
+
+async function pickWinner(idx) {
+  const r = room;
+  if (!isCzar(r)) return;
+  const revealed = r.revealed;
+  const entry = revealed[idx];
+  if (!entry) return;
+
+  const winnerId = entry.playerId;
+  const wName = r.players?.[winnerId]?.name || '?';
+  const newScore = (r.players?.[winnerId]?.score || 0) + 1;
+  const MAX = 5; // ilk 5 puana ulaşan kazanır
+
+  await rr().update({
+    winner: winnerId,
+    winnerName: wName,
+    ['players/' + winnerId + '/score']: newScore,
+    state: newScore >= MAX ? 'over' : 'result',
+  });
+}
+
+async function nextRound() {
+  // roundLock: tek bir client'ın tura geçmesini garanti eder
+  await rr('roundLock').transaction(v => {
+    if (v !== null && v !== undefined) return; // abort
+    return Date.now();
+  }, async (err, committed) => {
+    if (!committed || err) return;
+
+    const r = room;
+    const order = arr(r.order);
+    const nextIdx = (r.czarIdx + 1) % order.length;
+    const used = arr(r.usedBlacks).filter(Boolean);
+    const available = BLACK_CARDS.filter(c => !used.includes(c.id));
+    const pool = available.length ? available : BLACK_CARDS;
+    const blackCard = pool[0 | Math.random() * pool.length];
+
+    await rr().update({
+      state: 'playing',
+      czarIdx: nextIdx,
+      round: (r.round || 1) + 1,
+      blackCard,
+      played: null,
+      revealed: null,
+      revealLock: null,
+      roundLock: null,
+      winner: null,
+      winnerName: null,
+      usedBlacks: [...used, blackCard.id],
+    });
+  });
+}
+
+function leaveRoom() {
+  if (roomRef) { roomRef.off(); roomRef = null; }
+  sessionStorage.removeItem('pm_room');
+  roomCode = '';
+  room = null;
+  render();
+}
+
+// ════════════════════════════════════════════════════════════
+//  FIREBASE LİSTENER
+// ════════════════════════════════════════════════════════════
+function listenRoom() {
+  if (roomRef) roomRef.off();
+  roomRef = db.ref('rooms/' + roomCode);
+  roomRef.on('value', snap => {
+    const data = snap.val();
+    if (!data) { leaveRoom(); return; }
+
+    // Firebase array normalizasyonu
+    if (data.order && !Array.isArray(data.order)) data.order = Object.values(data.order);
+    if (data.usedBlacks && !Array.isArray(data.usedBlacks)) data.usedBlacks = Object.values(data.usedBlacks);
+
+    room = data;
+    render();
+
+    // Tüm oyuncular kart oynadıysa → açıklama aşamasına geç
+    if (room.state === 'playing' && !room.revealLock) {
+      const ncs = nonCzarIds(room);
+      const allIn = ncs.length > 0 && ncs.every(pid => room.played?.[pid]);
+      if (allIn) revealAll();
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+//  RENDER — innerHTML tabanlı basit engine
+// ════════════════════════════════════════════════════════════
+function render() {
+  document.getElementById('app').innerHTML = getScreen();
+}
+
+function getScreen() {
+  if (!room || !roomCode) return lobbyHTML();
+  switch (room.state) {
+    case 'waiting':  return waitingHTML();
+    case 'playing':  return playingHTML();
+    case 'judging':  return judgingHTML();
+    case 'result':   return resultHTML();
+    case 'over':     return overHTML();
+    default: return lobbyHTML();
+  }
+}
+
+// ── LOBI ──
+function lobbyHTML() {
+  return `
+    <div class="logo">POST<span>MODERN</span><br>MEMEler</div>
+    <p class="tagline">Mimari Karikatür Kart Oyunu</p>
+    <div class="panel">
+      <input id="nameInput" class="inp" placeholder="Adınız..." value="${myName}" maxlength="16"
+        onkeydown="if(event.key==='Enter')document.getElementById('codeInput')?.focus()">
+      <button class="btn red" onclick="createRoom()">＋ ODA OLUŞTUR</button>
+      <div class="or">— veya var olan odaya katıl —</div>
+      <input id="codeInput" class="inp code-inp" placeholder="ABCD" maxlength="4"
+        oninput="this.value=this.value.toUpperCase()"
+        onkeydown="if(event.key==='Enter')joinRoom()">
+      <button class="btn dark" onclick="joinRoom()">→ ODAYA KATIL</button>
+      <div id="errMsg" class="err"></div>
+    </div>
+    <div class="foot">2–4 oyuncu · İlk 5 puan kazanır · Firebase Realtime</div>
+  `;
+}
+
+// ── BEKLİYORUZ ──
+function waitingHTML() {
+  const r = room;
+  const players = Object.entries(r.players || {});
+  const canStart = players.length >= 2;
+
+  return `
+    <div class="code-box">
+      <div class="code-lbl">ODA KODU</div>
+      <div class="code-val">${roomCode}</div>
+      <div class="code-hint">Arkadaşlarına gönder 👆</div>
+    </div>
+
+    <div class="panel">
+      <div class="sec-lbl">OYUNCULAR (${players.length}/4)</div>
+      ${players.map(([pid, p]) => `
+        <div class="player-row${pid === MY_ID ? ' me' : ''}">
+          <div class="dot${pid === MY_ID ? ' mine' : ''}"></div>
+          <span>${p.name}${pid === arr(r.order)[0] ? ' 👑' : ''}</span>
+          ${pid === MY_ID ? '<span class="me-tag">(sen)</span>' : ''}
+        </div>
+      `).join('')}
+    </div>
+
+    ${isHost(r) ? `
+      <button class="btn red" ${canStart ? '' : 'disabled'} onclick="startGame()">
+        ${canStart ? '▶ OYUNU BAŞLAT' : 'En az 2 oyuncu gerekli'}
+      </button>
+    ` : `
+      <div class="wait-msg" style="margin-top:8px">
+        ⏳ Host oyunu başlatmasını bekle...
+      </div>
+    `}
+
+    <button class="btn sm dark" onclick="leaveRoom()">← Çık</button>
+  `;
+}
+
+// ── OYNUYORUZ ──
+function playingHTML() {
+  const r = room;
+  const myHand = arr(r.hands?.[MY_ID]);
+  const myPlayed = r.played?.[MY_ID];
+  const ncs = nonCzarIds(r);
+  const subCount = ncs.filter(pid => r.played?.[pid]).length;
+
+  return `
+    ${headerHTML(r)}
+    ${blackCardHTML(r.blackCard)}
+
+    ${isCzar(r) ? `
+      <div class="panel">
+        <div class="sec-lbl">⚖️ YARGIÇ SENSİN — Oyuncular seçiyor</div>
+        <div class="wait-msg">${subCount} / ${ncs.length} oyuncu kart oynadı</div>
+        <div class="prog"><div class="prog-fill" style="width:${ncs.length ? subCount / ncs.length * 100 : 0}%"></div></div>
+      </div>
+    ` : myPlayed ? `
+      <div class="panel">
+        <div class="sec-lbl">OYNADINIZ ✓</div>
+        ${whiteCardHTML(myPlayed, false)}
+        <div class="wait-msg">Yargıç değerlendiriyor...</div>
+      </div>
+    ` : `
+      <div class="sec-lbl">ELİNİZDEKİ KARTLAR — birine dokun</div>
+      <div class="hand">${myHand.map(c => whiteCardHTML(c, true)).join('')}</div>
+    `}
+
+    ${scoresHTML(r)}
+  `;
+}
+
+// ── YARGILIYORUZ ──
+function judgingHTML() {
+  const r = room;
+  const revealed = r.revealed ? Object.values(r.revealed) : [];
+
+  return `
+    ${headerHTML(r)}
+    ${blackCardHTML(r.blackCard)}
+
+    ${isCzar(r) ? `
+      <div class="sec-lbl">⚖️ EN İYİ KARTI SEÇ — dokun</div>
+      <div class="hand">
+        ${revealed.map((e, i) => `
+          <div class="white-card clickable" style="background:${e.card.color}" onclick="pickWinner(${i})">
+            <div class="c-emoji">${e.card.emoji}</div>
+            <div class="c-name" style="color:${e.card.accent}">${e.card.name}</div>
+            <div class="c-text">${e.card.text}</div>
+            <div class="pick-hint">SEÇ →</div>
+          </div>
+        `).join('')}
+      </div>
+    ` : `
+      <div class="panel">
+        <div class="sec-lbl">YARGIÇ DEĞERLENDİRİYOR</div>
+        <div class="wait-msg">⚖️ <strong>${czarName(r)}</strong> en iyi kartı seçiyor...</div>
+        <div class="emoji-row">${revealed.map(e => `<span>${e.card.emoji}</span>`).join('')}</div>
+      </div>
+    `}
+
+    ${scoresHTML(r)}
+  `;
+}
+
+// ── SONUÇ ──
+function resultHTML() {
+  const r = room;
+  const revealed = r.revealed ? Object.values(r.revealed) : [];
+  const winEntry = revealed.find(e => e.playerId === r.winner);
+
+  return `
+    <div class="result-banner">🏆 ${r.winnerName || '?'} KAZANDI!</div>
+    ${winEntry ? whiteCardHTML(winEntry.card, false) : ''}
+    ${blackCardHTML(r.blackCard)}
+    ${scoresHTML(r)}
+    <button class="btn dark" onclick="nextRound()">Sonraki Tur →</button>
+  `;
+}
+
+// ── OYUN BİTTİ ──
+function overHTML() {
+  const r = room;
+  const sorted = Object.entries(r.players || {}).sort((a, b) => b[1].score - a[1].score);
+  const medals = ['🥇','🥈','🥉','4️⃣'];
+
+  return `
+    <div class="logo" style="font-size:30px">OYUN BİTTİ</div>
+    <div class="panel">
+      ${sorted.map(([pid, p], i) => `
+        <div class="player-row${pid === MY_ID ? ' me' : ''}">
+          <span style="font-size:22px">${medals[i] || ''}</span>
+          <strong>${p.name}</strong>
+          <span class="pts">${p.score} puan</span>
+        </div>
+      `).join('')}
+    </div>
+    <button class="btn red" onclick="leaveRoom()">Ana Menüye Dön</button>
+  `;
+}
+
+// ── PARÇALAR ──
+function headerHTML(r) {
+  return `
+    <div class="hdr">
+      <span class="round-tag">TUR ${r.round || 1}</span>
+      <span class="czar-tag">⚖️ ${czarName(r)}</span>
+    </div>
+  `;
+}
+
+function blackCardHTML(card) {
+  if (!card) return '';
+  return `
+    <div class="black-card" style="background:${card.color}">
+      <div class="bc-year">${card.year}</div>
+      <div class="bc-emoji">${card.emoji}</div>
+      <div class="bc-title">${card.title}</div>
+      <div class="bc-prompt">${card.prompt}</div>
+    </div>
+  `;
+}
+
+function whiteCardHTML(card, clickable) {
+  return `
+    <div class="white-card${clickable ? ' clickable' : ''}"
+         style="background:${card.color}"
+         ${clickable ? `onclick="submitCard('${card.id}')"` : ''}>
+      <div class="c-emoji">${card.emoji}</div>
+      <div class="c-name" style="color:${card.accent}">${card.name}</div>
+      <div class="c-text">${card.text}</div>
+    </div>
+  `;
+}
+
+function scoresHTML(r) {
+  const order = arr(r.order);
+  return `
+    <div class="scores">
+      ${order.map(pid => `
+        <div class="score-chip${pid === MY_ID ? ' me' : ''}${pid === czarId(r) ? ' czar' : ''}">
+          ${pid === czarId(r) ? '<div class="sc-czar">⚖️</div>' : ''}
+          <div class="sc-name">${(r.players?.[pid]?.name || '?').slice(0, 7)}</div>
+          <div class="sc-pts">${r.players?.[pid]?.score || 0}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function showErr(msg) {
+  const el = document.getElementById('errMsg');
+  if (el) el.textContent = msg;
+  else alert(msg);
+}
+
+// ════════════════════════════════════════════════════════════
+//  BAŞLAT
+// ════════════════════════════════════════════════════════════
+if (roomCode) {
+  // sessionStorage'da oda var — yeniden bağlan
+  listenRoom();
+} else {
+  render();
+}
+</script>
+</body>
+</html>
