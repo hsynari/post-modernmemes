@@ -47,6 +47,14 @@ body{
   padding:20px 16px 40px;
   gap:18px;
 }
+@media(min-width:768px){
+  #app{max-width:960px;padding:28px 32px 48px}
+  .hand{flex-direction:row!important;align-items:stretch}
+  .hand .white-card{flex:1 1 0;min-width:0}
+  .black-card{max-width:420px;align-self:center}
+  .scores{justify-content:center}
+  .result-banner{max-width:500px;align-self:center}
+}
 
 /* ── LOGO ── */
 .logo{
@@ -198,13 +206,38 @@ body{
 .bc-emoji{font-size:36px;line-height:1}
 .bc-title{font-family:var(--syne);font-size:22px;font-weight:800;line-height:1.1}
 .bc-prompt{font-size:13px;line-height:1.7;opacity:0.85}
+/* Siyah kart — görsel versiyonu */
+.black-card.img-prompt{
+  padding:10px;
+  gap:8px;
+}
+.bc-img-frame{
+  width:100%;
+  overflow:hidden;
+  clip-path:polygon(10px 0%,calc(100% - 10px) 0%,100% 10px,100% calc(100% - 10px),calc(100% - 10px) 100%,10px 100%,0% calc(100% - 10px),0% 10px);
+}
+.bc-img{
+  width:100%;
+  height:auto;
+  display:block;
+}
+.bc-label{
+  font-family:var(--syne);
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  opacity:0.6;
+  text-align:center;
+  padding:4px 0 2px;
+}
 
 /* ── WHITE CARDS ── */
 .hand{
   width:100%;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:12px;
 }
 .white-card{
   width:100%;
@@ -224,6 +257,48 @@ body{
 .c-emoji{font-size:26px;line-height:1}
 .c-name{font-family:var(--syne);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
 .c-text{font-size:13px;line-height:1.6;font-style:italic}
+.c-img{
+  width:100%;
+  display:block;
+  /* inner radius = outer(8px) - frame(5px) ≈ 3px */
+  border-radius:3px;
+}
+/* Dış çerçeve sarmalayıcı */
+.img-frame{
+  position:relative;
+  display:block;
+  /* outer shape: 8px pah */
+  clip-path:polygon(8px 0%,calc(100% - 8px) 0%,100% 8px,100% calc(100% - 8px),calc(100% - 8px) 100%,8px 100%,0% calc(100% - 8px),0% 8px);
+  /* çerçeve = koyu bg + 5px padding */
+  background:#111;
+  padding:5px;
+  /* drop-shadow çift katman → çerçeve hissi + gölge */
+  filter:
+    drop-shadow(0 0 1px #111)
+    drop-shadow(0 0 1px #111)
+    drop-shadow(5px 5px 0 #111);
+  transition:filter .15s, transform .15s;
+}
+.img-frame:hover{
+  filter:
+    drop-shadow(0 0 1px #111)
+    drop-shadow(0 0 1px #111)
+    drop-shadow(7px 7px 0 #111);
+}
+.white-card.has-img{
+  padding:0;
+  border:none;
+  box-shadow:none;
+  background:transparent!important;
+  overflow:visible;
+}
+.white-card.has-img.clickable:active .img-frame{
+  transform:translate(2px,2px);
+  filter:drop-shadow(1px 1px 0 #111);
+}
+.white-card.has-img .c-name,
+.white-card.has-img .c-text,
+.white-card.has-img .pick-hint{ display:none }
 .pick-hint{
   position:absolute;right:14px;top:50%;transform:translateY(-50%);
   font-family:var(--syne);font-size:11px;font-weight:700;
@@ -311,24 +386,174 @@ const db = firebase.database();
 //  KART VERİSİ
 // ════════════════════════════════════════════════════════════
 const BLACK_CARDS = [
-  { id:"b1", emoji:"💥", year:"1972", title:"Pruitt-Igoe Yıkılıyor",
-    prompt:"Modernizmin ölüm tarihi olarak kabul edildi. Televizyonlar canlı yayında. Mimarlık tarihçisi olarak bu ana tepkiniz nedir?",
-    color:"#1a1a1a" },
-  { id:"b2", emoji:"🪑", year:"1984", title:"AT&T Binası Chippendale Detayı",
-    prompt:"Philip Johnson gökdelen tepesine rokoko motifi yerleştiriyor. Yanında oturuyorsunuz. Söyleyecekleriniz?",
-    color:"#0d0d2b" },
-  { id:"b3", emoji:"🎰", year:"1972", title:"Learning from Las Vegas",
-    prompt:"Venturi bu neon cehennemi mimarlığın geleceği olarak sunuyor. Eleştiri sırası size geldi.",
-    color:"#1a0a00" },
-  { id:"b4", emoji:"🏭", year:"1923", title:'"Ev bir yaşama makinesidir"',
-    prompt:"Le Corbusier'nin manifestosu önünüzde. Pencereden güneş girmiyor. Yanıtınız?",
-    color:"#001a00" },
-  { id:"b5", emoji:"✨", year:"1997", title:"Guggenheim Bilbao Açılıyor",
-    prompt:"Titanium yüzeyler kamerayı yanıltıyor. Bu mimarlık mı, heykel mi, marka mı?",
-    color:"#1a001a" },
-  { id:"b6", emoji:"📢", year:"1977", title:"Jencks Manifestosu",
-    prompt:"Modern mimarinin öldüğünü ilan ediyor. Slaytlar geçiyor, Pruitt-Igoe loop'ta. Siz de kürsüdesiniz. Ne diyeceksiniz?",
-    color:"#0d0a00" },
+  { id:"b8",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(10).png",
+    year:"~30.000 BCE", title:"Prehistorik Postmodernizm",
+    prompt:"", color:"#1a120a",
+    responses:[
+      { id:"b8r1", text:"Venturi’nin “dekore edilmiş barakına” kavramının prehistorik öncüsü; bu mağara sadece bir barınak değil, bir anlamlandırma yüzeyi.", color:"#f5f0e8", accent:"#555" },
+      { id:"b8r2", text:"Postmodernizmin tarihsel referanslara olan takıntısının en erken örneği; mağara sanatı, en eski tarihselcilik ve pastiş olarak okunabilir.", color:"#fff5e0", accent:"#888" },
+      { id:"b8r3", text:"Less is a bore felsefesinin en ilkel kanıtı; mağara duvarının pürüzsüz yüzeyi süsleme yoluyla zenginleştiriliyor.", color:"#f0f0e8", accent:"#555" },
+      { id:"b8r4", text:"En az inşa edilmiş bağlamda en teorik mimari iddiayı ortaya atarak bağlamın sadece fiziksel değil zihinsel bir yapı olduğunu gösteriyor.", color:"#eef0f5", accent:"#556" },
+      { id:"b8r5", text:"Mağaranın doğal barınak tipolojisinin sanatsal ve teorik alan olarak yeniden tanımlanması yoluyla yıkılması.", color:"#f5eeff", accent:"#557" },
+      { id:"b8r6", text:"Bu adamın postmodernist olma iddiası, o gergedan çiziminin gergedan değil bir gergedanın simülasyonu olduğunu iddia etmesinden kaynaklanıyor. Mağara sanatında bile teori şart.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b9",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(11).png",
+    year:"", title:"Less is More... mu?",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b9r1", text:"«Less is more» felsefesinin sınırlarında gezinirken, tasarımın tamamen hiçliğe dönüşme tehlikesiyle karşı karşıya kaldığı o ironik eşik.", color:"#f5f5f0", accent:"#555" },
+      { id:"b9r2", text:"Aşırı teorileştirme ve akademik jargon çabasının, bazen sadece kötü veya eksik bir tasarımı örtbas etmek için kullanılmasının mükemmel bir özeti.", color:"#fff5e8", accent:"#888" },
+      { id:"b9r3", text:"Anlamın tamamen izleyicinin algısına bırakıldığı postmodern okumanın, işlevsizlik ve sıradanlık ile flört ettiği o ince çizginin eleştirisi.", color:"#f0f0f5", accent:"#556" },
+      { id:"b9r4", text:"Mimari manifestoların ve -izmlerin karmaşasında kaybolup, dümdüz bir duvarı aşırı entelektüél bir analiz nesnesine dönüştürme takıntısı.", color:"#f5f0ee", accent:"#855" },
+      { id:"b9r5", text:"Yapısal gerçekliğin ve ironinin birbirine girdiği noktada, geriye sadece anlaşılmaz bir kavramsal boşluk kalması durumu.", color:"#eef5f0", accent:"#558" },
+      { id:"b9r6", text:"Mimarlık jürisinde paftandaki devasa beyaz boşluğu neorealist bir yaklaşım benimsedim diye yutturmaya çalıştığında hocalarının aklından geçen tam olarak budur.", color:"#fff0f5", accent:"#558" },
+    ] },
+  { id:"b10",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(12).png",
+    year:"", title:"Kolaj Estetiği",
+    prompt:"", color:"#0d0d1a",
+    responses:[
+      { id:"b10r1", text:"Postmodernizmin klasik «organik bütünlük» algısını reddedip, parçalanmışlığı (fragmentation) ve kolaj estetiğini yüceltmesinin ironik bir okuması.", color:"#f5f5f0", accent:"#555" },
+      { id:"b10r2", text:"Binanın cephesinin yapısal sistemden koparılarak bağımsız birer gösterge panosuna (billboard) dönüşmesi fikrinin doğrudan insan silüetine uyarlanması.", color:"#fff5e8", accent:"#888" },
+      { id:"b10r3", text:"Farklı bağlamlardan koparılmış mimari elemanların bir araya getirilmesiyle oluşan «pastiş» kavramının gerçek dünyadaki pratik işlevsizliğine dair bir eleştiri.", color:"#f0f0f5", accent:"#556" },
+      { id:"b10r4", text:"Mimari sözdiziminin bozulması: Pencere, çatı veya kolon gibi öğelerin geleneksel konumlarından koparılıp rastgele havada asılı bırakılması tutkusu.", color:"#eef5f0", accent:"#558" },
+      { id:"b10r5", text:"Modernizmin «biçim işlevi izler» dogmasına karşı, biçimin tamamen otonomlaşıp asıl işlevi anlamsızlaştırdığı o teorik çıkmaz.", color:"#f5eeff", accent:"#557" },
+      { id:"b10r6", text:"Teslim sabahı paftaları hizalamaya vakit bulamayıp «mekansal parçalanma ve otonomi üzerine çalışıyorum» diyerek durumu kurtarmaya çalışan öğrenciye hocasının vermek istediği asıl tepki.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b11",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(13).png",
+    year:"", title:"Fragmante Bağlam",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b11r1", text:"Postmodernizmin «büyük anlatıları» reddedip her tasarımı yalnızca yerel, anlık bağlama indirgemesinin ironik bir dışavurumu.", color:"#f5f5f0", accent:"#555" },
+      { id:"b11r2", text:"Bütüncül ve evrensel modern tasarım anlayışının çöküşü; mimari okumanın artık sadece birbiriyle ilgisiz, otonom parçalar üzerinden yapılabilmesi gerçeği.", color:"#fff5e8", accent:"#888" },
+      { id:"b11r3", text:"Şapkadaki kemik detayı; farklı tarihsel ve kültürel kodların hiyerarşisiz bir şekilde bağlamından koparılıp aynı potada eritilmesini (pastiş/kolaj) kusursuzca özetliyor.", color:"#f0f0f5", accent:"#556" },
+      { id:"b11r4", text:"Yüksek mimari teorinin akademik jargondan çıkıp sıradan insanın günlük diline sızarak o meşhur «çift kodlama» sınırlarını zorlaması.", color:"#eef5f0", accent:"#558" },
+      { id:"b11r5", text:"Mimaride tekil ve mutlak bir anlamın kalmadığı, bir yapının kimliğinin tamamen kopuk referansların anlamsız bir yığılımı (assemblage) olduğu yönündeki eleştirel kabul.", color:"#f5eeff", accent:"#557" },
+      { id:"b11r6", text:"Konsept bulamayıp Pinterest'ten kestiği alakasız detayları paftaya dizen öğrencinin «yapı kendi bağlamıyla fragmante bir ilişki kuruyor» dediği cuma akşamı muhabbet.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b12",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(14).png",
+    year:"", title:"İşlevden Bağımsız Biçim",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b12r1", text:"Postmodernizmin «biçim işlevden bağımsızdır» tutumunun, hayati önem taşıyan medikal bir cihaza uygulanmasındaki yapısal ve işlevsel absürtlük.", color:"#f5f5f0", accent:"#555" },
+      { id:"b12r2", text:"Michael Graves'in mimariyi gündelik tüketim nesnelerine indirgeyen popülist tasarım yaklaşımının nerelere varabileceğini sorgulayan kara mizahi bir eleştiri.", color:"#fff5e8", accent:"#888" },
+      { id:"b12r3", text:"Yıldız mimarların isimlerinin tüketim markasına dönüşerek, ölüm kalım anlarında bile bir statü ve şov nesnesi olarak öne sürülmesinin ironisi.", color:"#f0f0f5", accent:"#556" },
+      { id:"b12r4", text:"Graves'in oyuncaklı, pastel renkli ironik estetiğinin, klinik ve aciliyet gerektiren gerçek dünya senaryolarıyla girdiği trajikomik tezat.", color:"#eef5f0", accent:"#558" },
+      { id:"b12r5", text:"Saf pragmatizm gerektiren bir aracın «ikonik tasarım nesnesi» kaygısıyla süslenmesinin, mimari pratiğin insan gerçekliğinden ne kadar kopabileceğini kanıtlaması.", color:"#f5eeff", accent:"#557" },
+      { id:"b12r6", text:"Adamın kalbi durmuş yatıyor olabilir ama defibrilatör muhtemelen pastel tonlarda, kolları minik İyonik sütunlar şeklinde ve tam şarjda kuş sesi çıkararak ötüyor.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b13",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(1).png",
+    year:"", title:"Dekore Edilmiş Barınak",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b13r1", text:"Robert Venturi'nin «dekore edilmiş barınak» kavramının en yalın özeti; yapının kimliğini mekansal form ile değil, cephesine asılan tabela ve süsleme üzerinden inşa etmesi.", color:"#f5f5f0", accent:"#555" },
+      { id:"b13r2", text:"Mimarlığın mekansal bir deneyimden çıkıp tamamen göstergebilimsel bir iletişim aracına, adeta iki boyutlu bir yüzeye dönüşmesinin ironik bir eleştirisi.", color:"#fff5e8", accent:"#888" },
+      { id:"b13r3", text:"Geleneksel mimari tipolojilerin kaybolduğu noktada, yapının kendi varoluşunu kanıtlamak için çaresizce kelimelere ve metne ihtiyaç duyması durumu.", color:"#f0f0f5", accent:"#556" },
+      { id:"b13r4", text:"Postmodernizmin Pop Art'tan aldığı ilhamla, otoyol tabelalarını ve ticari reklam estetiğini «yüksek mimari» teorisine entegre etme çabasının açık bir temsili.", color:"#eef5f0", accent:"#558" },
+      { id:"b13r5", text:"Modernizmin «biçim işlevi izler» dogmasına karşı, dış cephedeki gösterge ile iç mekandaki işlevin birbirinden tamamen bağımsız, kopuk elemanlar olarak ele alınması.", color:"#f5eeff", accent:"#557" },
+      { id:"b13r6", text:"Kütle o kadar soyutlanmış ki jüride hocalar «bu ne, kentsel enstalasyon mu?» diye sorar; çaresizce makete bakıp «hocam yemin ederim o da bir bina» demek zorunda kalırsın.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b14",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(2).png",
+    year:"", title:"Ördek mi, Barınak mı?",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b14r1", text:"«Learning from Las Vegas» kitabının temel tezi; sembolün bizzat mekana dönüştüğü «ördek» yapılar ile sıradan yapının iletişim aracına dönüştüğü «dekore edilmiş barınak» arasındaki meşhur ayrım.", color:"#f5f5f0", accent:"#555" },
+      { id:"b14r2", text:"Modernizmin zorlama anlam çıkarma çabasına (ördek) karşı, Postmodernizmin sıradan olanı kabul edip anlamı yalnızca yüzeye ve tabelaya bırakmasının manifestosu.", color:"#fff5e8", accent:"#888" },
+      { id:"b14r3", text:"Mimarlığın göstergebilimsel okuması; binanın biçiminin başlı başına bir mesaj mı olduğu, yoksa mesajları taşıyan dilsiz bir arka plan mı olduğu üzerine ikonik tartışma.", color:"#f0f0f5", accent:"#556" },
+      { id:"b14r4", text:"«Dekore edilmiş kutu»nun mimari pratiğin pragmatik gerçeği olması; iç mekan basit ve ekonomik hacimle çözülüp kentsel kimlik yalnızca cephedeki süslemelerle sağlanıyor.", color:"#eef5f0", accent:"#558" },
+      { id:"b14r5", text:"Duck örneğinde mekan tamamen dış görünüme kurban edilirken, Decorated Shed'de işlev ve iletişim dürüstçe birbirinden ayrılır.", color:"#f5eeff", accent:"#557" },
+      { id:"b14r6", text:"Kompleks parametrik «ördek» binayı haftalarca çizersin ama jüride patlar; oysa düz kutunun cephesine D5'te ışıklı bir tabela atsan hocalar «işte bağlamsal gerçeklik» diye alkışlardı.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b15",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(3).png",
+    year:"", title:"Jargon Üzerine Jargon",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b15r1", text:"Postmodern teorinin biçimsel karmaşayı veya rastlantısallığı aşırı entelektüel jargonla (lirik alt akıntı vb.) meşrulaştırma çabasının klasik bir eleştirisi.", color:"#f5f5f0", accent:"#555" },
+      { id:"b15r2", text:"Estetik ve oransal kuralların yıkılmasıyla, bir eserin değerinin tamamen eleştirmenin kurgusal retoriğine bağlı hale gelmesi durumu.", color:"#fff5e8", accent:"#888" },
+      { id:"b15r3", text:"Jencks'in «çift kodlama» fikrinin trajik çöküşü; teorisyenin okuduğu derin anlam ile sıradan kullanıcının gördüğü basit anlamsızlık arasındaki büyük uçurum.", color:"#f0f0f5", accent:"#556" },
+      { id:"b15r4", text:"Fiziksel tasarımın gerçek kalitesinin geriye düşmesi; asıl mimari ürünün etrafında üretilen metin, felsefe ve pazarlandığı kelimeler olması gerçeği.", color:"#eef5f0", accent:"#558" },
+      { id:"b15r5", text:"Biçimsel bozum (distortion) takıntısının, hiçbir kural tanımayan bir kaos ile ayırt edilemez hale geldiği o tehlikeli kırılma noktası.", color:"#f5eeff", accent:"#557" },
+      { id:"b15r6", text:"Workflow'u yanlış bağlayıp AI'ın halüsinasyonla ürettiği o glitchli kütleyi müşteriye «mekansal bileşenlerin lirik bir alt akıntıyla erimesi» diye satmaya çalıştığın o an.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b16",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(4).png",
+    year:"", title:"Mickey Mouse Kulakları",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b16r1", text:"Postmodernizmin elitist «yüksek mimariyi» reddedip Pop Art, kitle kültürü ve ticari simgelerle (Mickey Mouse kulakları) kucaklaşmasının kusursuz bir tasviri.", color:"#f5f5f0", accent:"#555" },
+      { id:"b16r2", text:"Denise Scott Brown'un başındaki kırık alınlık, tarihsel referansların bağlamından koparılarak ironik bir süsleme ve işaret (sign) olarak yeniden üretilmesini simgeliyor.", color:"#fff5e8", accent:"#888" },
+      { id:"b16r3", text:"«Learning from Las Vegas» felsefesinin vizyonu; sıradan olanın, ticari otoyol tabelalarının ve eğlence mimarisinin akademik bir teori olarak merkeze alınması.", color:"#f0f0f5", accent:"#556" },
+      { id:"b16r4", text:"Modernizmin soğuk rasyonalitesine karşı mimarlığa neşeyi, iletişimsel zenginliği ve o meşhur «karmaşa ve çelişkiyi» geri getiren manifesto.", color:"#eef5f0", accent:"#558" },
+      { id:"b16r5", text:"Yüksek sanat ile gündelik mimari arasındaki hiyerarşinin yıkılması; tasarımın artık saf hacim oyunu değil, kültürel sembol okuması haline gelmesi.", color:"#f5eeff", accent:"#557" },
+      { id:"b16r6", text:"Sen konsepti «Tarihi Roma» anlarsın, partnerin «Disneyland» anlar; jüriye çıkıp «biz pop-kültür ile tarihselciliği harmanlayan çift kodlu bir okuma yaptık» diye Sevinç Hoca'yı ikna etmeye çalışırsınız.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b17",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(5).png",
+    year:"", title:"Saf Değiştiren Philip Johnson",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b17r1", text:"Uluslararası Üslup'un en ateşli savunucusuyken saf değiştirip Postmodernizmin en popüler provokatörü haline gelmesinin kusursuz bir tasviri.", color:"#f5f5f0", accent:"#555" },
+      { id:"b17r2", text:"Kafasındaki «kırık alınlık», AT&T Binası'nın tepesindeki ikonik detayın bir mimarın tüm entelektüel kimliğini nasıl ele geçirdiğini simgeliyor.", color:"#fff5e8", accent:"#888" },
+      { id:"b17r3", text:"Mimari ideolojinin katı bir inanç sisteminden çıkıp dönemin ruhuna göre değiştirilebilen yüzeysel bir moda veya biçimsel oyun haline gelmesinin eleştirisi.", color:"#f0f0f5", accent:"#556" },
+      { id:"b17r4", text:"Tarihsel referansların gökdelen ölçeğinde devasa, ironik birer süs eşyasına dönüşerek kentsel silüetin bir «logo» tasarımına indirgenmesi.", color:"#eef5f0", accent:"#558" },
+      { id:"b17r5", text:"Modernizmin ağırbaşlı etiğinin yerini mimarın kendi ikonik imajının ve yapının «yıldız mimar» markasının bir parçası olmasının alması.", color:"#f5eeff", accent:"#557" },
+      { id:"b17r6", text:"Teslime bir hafta kala Rhino'da modernist kütleleri toparlayamayıp çaresizlikten kütüphaneden bir klasik alınlığı tepeye oturtup jüriye «ben modernizmin dogmalarını yıkıyorum» diyen öğrenci rahatlığı.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b18",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(6).png",
+    year:"", title:"Dekon Köpek Kulübesi",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b18r1", text:"Dekonstrüktivizmin kasten yaratılmış «kaos» estetiğinin, sıradan ve pragmatik bir tipolojide (köpek kulübesi) nasıl absürt bir kontrasta dönüştüğünün eleştirisi.", color:"#f5f5f0", accent:"#555" },
+      { id:"b18r2", text:"Frank Gehry'nin endüstriyel kaplama malzemelerini kullanarak yerleşik estetik normları ve dik açılı formları altüst etme çabasının mizahi bir dışavurumu.", color:"#fff5e8", accent:"#888" },
+      { id:"b18r3", text:"Yıldız mimarların imzası haline gelen aşırı heykelsi formların, dışarıdan bakan sıradan bir gözlemcinin (kedinin) algısında yarattığı o derin «anlamsızlık» hissi.", color:"#f0f0f5", accent:"#556" },
+      { id:"b18r4", text:"«Biçim işlevi izler» dogmasının tamamen parçalanıp yapının kendi başına çökmekte olan, kaotik bir enstalasyon illüzyonuna dönüştürülmesi.", color:"#eef5f0", accent:"#558" },
+      { id:"b18r5", text:"Yüksek mimari bir eserin başarısının ancak belirli bir elit zümre tarafından «anlaşılabilen» bir zevk meselesi olduğu kibrine yapılan ince bir taşlama.", color:"#f5eeff", accent:"#557" },
+      { id:"b18r6", text:"Grasshopper'da günlerce dekonstrüktif eğrileri çözmeye çalışıp sonunda Bambu Lab'da bastığın yamuk yumuk PLA yığınına kedinin (ve hocanın) vereceği o acımasız gülme tepkisi.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b19",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(7).png",
+    year:"", title:"Entelektüel Statü Etiketi",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b19r1", text:"Mimari bir akımın mekansal nitelikten çıkıp entelektüel statü sembolü veya sosyetik bir kimlik etiketine dönüşmesinin trajikomik hali.", color:"#f5f5f0", accent:"#555" },
+      { id:"b19r2", text:"Postmodernizmin «çoğulculuk» kavramlarının sosyal hayattaki karşılığı; birbiriyle hiçbir organik bağı olmayan tamamen uyumsuz parçaların aynı kurgu içinde rastgele bir araya getirilmesi.", color:"#fff5e8", accent:"#888" },
+      { id:"b19r3", text:"Modernizmin standartlaştırılmış «ideal insan» dayatmasına karşı, postmodernizmin heterojen ve çelişkilerle dolu sıradan bireyini merkeze alan alaycı bir yaklaşım.", color:"#f0f0f5", accent:"#556" },
+      { id:"b19r4", text:"Yan yana inşa edilen binaların aralarında hiçbir diyalog kurmadan sadece «orada bulundukları için» tesadüfi bir yığılma (assemblage) oluşturması gerçeği.", color:"#eef5f0", accent:"#558" },
+      { id:"b19r5", text:"«Postmodern» kelimesinin içinin o kadar boşaltılması ki, gündelik ev partisinde insanların sadece ilginç görünmek için üzerine yapıştırdığı yüzeysel bir etikete dönüşmesi.", color:"#f5eeff", accent:"#557" },
+      { id:"b19r6", text:"Jüride «çevreyle nasıl bir ilişki kuruyor?» diye sorulduğunda çaresizce «birbiriyle alakasız ögelerin tesadüfi komşuluğu ihtimali üzerine kurguladım» dediğinde stüdyoya çöken o buz gibi sessizlik.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b20",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(8).png",
+    year:"", title:"Post-Teorik Zencefil Evi",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b20r1", text:"Masal mimarisinin saf ve «yenilebilir» dürüstlüğünün terk edilip yerine aşırı teorize edilmiş, ironik ve akademik jargonla meşrulaştırılmış tasarım kibrinin gelmesi.", color:"#f5f5f0", accent:"#555" },
+      { id:"b20r2", text:"Mimari teorideki «Post-» önekinin sihirli gücü; sıradan herhangi bir tipolojinin önüne eklendiğinde onu anında entelektüel ve akademik bir tartışma nesnesine dönüştürmesi.", color:"#fff5e8", accent:"#888" },
+      { id:"b20r3", text:"Cadının «çocukları şekerlemeyle tuzağa düşürme» işlevinin çöküşü; yapının kendi biçimsel ve teorik karmaşasında kaybolarak asıl bağlamından tamamen kopması.", color:"#f0f0f5", accent:"#556" },
+      { id:"b20r4", text:"«Malzemenin doğasına sadakat» ilkesinin alaycı reddi; tanıdık ve sıcak olanın (zencefilli çörek) yerini soğuk, yabancılaştırıcı bir estetiğin alması.", color:"#eef5f0", accent:"#558" },
+      { id:"b20r5", text:"Kültürel referansların ve peri masalı ikonografisinin yapısöküme uğratılarak geriye sadece okunması zor, eklektik bir pastiş bırakılması.", color:"#f5eeff", accent:"#557" },
+      { id:"b20r6", text:"Maket desteklerini temizlemeye üşenip yamuk yumuk PLA kütleyi jüriye koyduğunda «neden böyle görünüyor?» sorusuna «bu aslında masalsı tipolojinin post-teorik bir okuması» diyerek konuyu felsefeye bağlamaya çalıştığın o çaresiz an.", color:"#fff0ee", accent:"#855" },
+    ] },
+  { id:"b21",
+    img:"https://hsynari.github.io/post-modernmemes/images/1%20(9).png",
+    year:"", title:"Cam Kutunun Sonu",
+    prompt:"", color:"#111",
+    responses:[
+      { id:"b21r1", text:"Saf, rasyonel «cam kutu» gökdelenin keyfi tarihsel bir süsleme ile «kirletilmesi» karşısında dogmatik modernistin yaşadığı derin ideolojik şok.", color:"#f5f5f0", accent:"#555" },
+      { id:"b21r2", text:"Philip Johnson'ın AT&T Binası'na doğrudan gönderme; bu yapının Uluslararası Üslup'un mutlak hegemonyasının resmi olarak bitişini ilan etmesi.", color:"#fff5e8", accent:"#888" },
+      { id:"b21r3", text:"Adolf Loos'un «süsleme cinayettir» mantrasıyla yetişmiş bir neslin, devasa işlevsiz bir klasik alınlık eklenmesiyle yaşadığı görsel ve felsefi travma.", color:"#f0f0f5", accent:"#556" },
+      { id:"b21r4", text:"«Biçim işlevi izler» kuralının acımasızca katledilişi; tepedeki formun hiçbir yapısal amacı olmayıp binayı sadece postmodern devasa bir mobilyaya (Chippendale dolap) benzetmesi.", color:"#eef5f0", accent:"#558" },
+      { id:"b21r5", text:"Modernizmin evrensel tek doğru arayışının çökerek yerini Postmodernizmin ironik, seçmeci ve tarihselci kuralsızlığına bırakmasının sembolik yıkım anı.", color:"#f5eeff", accent:"#557" },
+      { id:"b21r6", text:"Dönem boyunca kartezyen grid ve strüktürel dürüstlüğü savunduktan sonra, teslim gecesi partnerin makete strafordan klasik bir saçak yapıştırmasını gördüğündeki o sinir krizi anı.", color:"#fff0ee", accent:"#855" },
+    ] }
 ];
 
 const WHITE_CARDS = [
@@ -419,6 +644,54 @@ async function createRoom() {
   listenRoom();
 }
 
+
+async function soloTest() {
+  const name = (document.getElementById('nameInput')?.value?.trim()) || 'Testçi';
+  myName = name;
+  sessionStorage.setItem('pm_name', name);
+
+  const code = genCode();
+  roomCode = code;
+  sessionStorage.setItem('pm_room', code);
+
+  const BOT = 'bot_czar';
+  const blackCard = BLACK_CARDS[0];
+  const hand = dealHands(blackCard, [MY_ID])[MY_ID];
+
+  await db.ref('rooms/' + code).set({
+    state: 'playing',
+    players: {
+      [BOT]:  { name: '🤖 Bot Yargıç', score: 0 },
+      [MY_ID]: { name, score: 0 },
+    },
+    order: [BOT, MY_ID],
+    czarIdx: 0,
+    round: 1,
+    createdAt: Date.now(),
+    hands: { [MY_ID]: hand },
+    blackCard,
+    played: null, revealed: null,
+    revealLock: null, roundLock: null,
+    winner: null, winnerName: null,
+    usedBlacks: [blackCard.id],
+    soloMode: true,
+  });
+  listenRoom();
+}
+
+
+// Her tura özel el dağıtımı
+function dealHands(blackCard, playerIds) {
+  const pool = (blackCard.responses && blackCard.responses.length >= 3)
+    ? blackCard.responses
+    : WHITE_CARDS;
+  const hands = {};
+  playerIds.forEach(pid => {
+    hands[pid] = shuffle([...pool]).slice(0, 3);
+  });
+  return hands;
+}
+
 async function joinRoom() {
   const name = document.getElementById('nameInput')?.value?.trim();
   const code = (document.getElementById('codeInput')?.value || '').trim().toUpperCase();
@@ -449,9 +722,8 @@ async function joinRoom() {
 async function startGame() {
   const r = room;
   const pids = arr(r.order);
-  const hands = {};
-  pids.forEach(pid => { hands[pid] = shuffle([...WHITE_CARDS]).slice(0, 5); });
   const blackCard = shuffle([...BLACK_CARDS])[0];
+  const hands = dealHands(blackCard, pids);
 
   await rr().update({
     state: 'playing',
@@ -479,13 +751,6 @@ async function submitCard(cardId) {
 
   // Replace card in hand
   const newHand = hand.filter(c => c.id !== cardId);
-  const usedIds = new Set(newHand.map(c => c.id));
-  const pool = WHITE_CARDS.filter(c => !usedIds.has(c.id));
-  const replacement = pool.length
-    ? pool[0 | Math.random() * pool.length]
-    : WHITE_CARDS[0 | Math.random() * WHITE_CARDS.length];
-  newHand.push(replacement);
-
   await rr().update({
     ['played/' + MY_ID]: card,
     ['hands/' + MY_ID]: newHand,
@@ -541,17 +806,23 @@ async function nextRound() {
 
     const r = room;
     const order = arr(r.order);
-    const nextIdx = (r.czarIdx + 1) % order.length;
+    const nextIdx = r.soloMode ? 0 : (r.czarIdx + 1) % order.length;
     const used = arr(r.usedBlacks).filter(Boolean);
-    const available = BLACK_CARDS.filter(c => !used.includes(c.id));
-    const pool = available.length ? available : BLACK_CARDS;
-    const blackCard = pool[0 | Math.random() * pool.length];
+    const blackCard = r.soloMode
+      ? BLACK_CARDS[(r.round || 1) % BLACK_CARDS.length]
+      : (() => {
+          const available = BLACK_CARDS.filter(c => !used.includes(c.id));
+          const pool = available.length ? available : BLACK_CARDS;
+          return pool[0 | Math.random() * pool.length];
+        })();
 
+    const newHands = dealHands(blackCard, order);
     await rr().update({
       state: 'playing',
       czarIdx: nextIdx,
       round: (r.round || 1) + 1,
       blackCard,
+      hands: newHands,
       played: null,
       revealed: null,
       revealLock: null,
@@ -594,6 +865,26 @@ function listenRoom() {
       const allIn = ncs.length > 0 && ncs.every(pid => room.played?.[pid]);
       if (allIn) revealAll();
     }
+
+    // Solo mod: bot yargıç otomatik kazananı seçer
+    if (room.state === 'judging' && room.soloMode && czarId(room) === 'bot_czar') {
+      setTimeout(async () => {
+        const snap = await db.ref('rooms/' + roomCode).once('value');
+        const r = snap.val();
+        if (r?.state !== 'judging') return;
+        const revealed = r.revealed ? Object.values(r.revealed) : [];
+        if (!revealed.length) return;
+        const idx = 0 | Math.random() * revealed.length;
+        const winnerId = revealed[idx].playerId;
+        const wName = r.players?.[winnerId]?.name || '?';
+        const newScore = (r.players?.[winnerId]?.score || 0) + 1;
+        await db.ref('rooms/' + roomCode).update({
+          winner: winnerId, winnerName: wName,
+          ['players/' + winnerId + '/score']: newScore,
+          state: newScore >= 5 ? 'over' : 'result',
+        });
+      }, 1200);
+    }
   });
 }
 
@@ -632,6 +923,7 @@ function lobbyHTML() {
       <button class="btn dark" onclick="joinRoom()">→ ODAYA KATIL</button>
       <div id="errMsg" class="err"></div>
     </div>
+    <button class="btn" style="background:#f0ebe0;border-style:dashed" onclick="soloTest()">🧪 TEK BAŞINA DENE</button>
     <div class="foot">2–4 oyuncu · İlk 5 puan kazanır · Firebase Realtime</div>
   `;
 }
@@ -719,14 +1011,7 @@ function judgingHTML() {
     ${isCzar(r) ? `
       <div class="sec-lbl">⚖️ EN İYİ KARTI SEÇ — dokun</div>
       <div class="hand">
-        ${revealed.map((e, i) => `
-          <div class="white-card clickable" style="background:${e.card.color}" onclick="pickWinner(${i})">
-            <div class="c-emoji">${e.card.emoji}</div>
-            <div class="c-name" style="color:${e.card.accent}">${e.card.name}</div>
-            <div class="c-text">${e.card.text}</div>
-            <div class="pick-hint">SEÇ →</div>
-          </div>
-        `).join('')}
+        ${revealed.map((e, i) => whiteCardHTML(e.card, true, i)).join('')}
       </div>
     ` : `
       <div class="panel">
@@ -788,6 +1073,18 @@ function headerHTML(r) {
 
 function blackCardHTML(card) {
   if (!card) return '';
+  if (card.img) {
+    return `
+      <div class="black-card img-prompt" style="background:${card.color}">
+        <div class="bc-year">${card.year}</div>
+        <div class="bc-img-frame">
+          <img class="bc-img" src="${card.img}" alt="${card.title}"
+               onerror="this.style.background='#333';this.alt='⚠️ Görsel yok'">
+        </div>
+        ${card.title ? `<div class="bc-label">${card.title}</div>` : ''}
+      </div>
+    `;
+  }
   return `
     <div class="black-card" style="background:${card.color}">
       <div class="bc-year">${card.year}</div>
@@ -798,14 +1095,17 @@ function blackCardHTML(card) {
   `;
 }
 
-function whiteCardHTML(card, clickable) {
+function whiteCardHTML(card, clickable, pickIdx) {
+  const top = card.img
+    ? `<div class="img-frame"><img class="c-img" src="${card.img}" onerror="this.style.cssText='width:100%;height:80px;background:#fee;border:1px dashed #c00'"></div>`
+    : (card.emoji ? `<div class="c-emoji">${card.emoji}</div>` : '');
   return `
-    <div class="white-card${clickable ? ' clickable' : ''}"
+    <div class="white-card${clickable ? ' clickable' : ''}${card.img ? ' has-img' : ''}"
          style="background:${card.color}"
-         ${clickable ? `onclick="submitCard('${card.id}')"` : ''}>
-      <div class="c-emoji">${card.emoji}</div>
-      <div class="c-name" style="color:${card.accent}">${card.name}</div>
+         ${clickable ? (pickIdx !== undefined ? `onclick="pickWinner(${pickIdx})"` : `onclick="submitCard('${card.id}')"`) : ''}>
+      ${top}
       <div class="c-text">${card.text}</div>
+      ${pickIdx !== undefined ? '<div class="pick-hint">SEÇ →</div>' : ''}
     </div>
   `;
 }
