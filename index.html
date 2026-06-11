@@ -655,7 +655,7 @@ async function soloTest() {
   sessionStorage.setItem('pm_room', code);
 
   const BOT = 'bot_czar';
-  const blackCard = BLACK_CARDS[0];
+  const blackCard = BLACK_CARDS[0 | Math.random() * BLACK_CARDS.length];
   const hand = dealHands(blackCard, [MY_ID])[MY_ID];
 
   await db.ref('rooms/' + code).set({
@@ -786,7 +786,7 @@ async function pickWinner(idx) {
   const winnerId = entry.playerId;
   const wName = r.players?.[winnerId]?.name || '?';
   const newScore = (r.players?.[winnerId]?.score || 0) + 1;
-  const MAX = 5; // ilk 5 puana ulaşan kazanır
+  const MAX = r.soloMode ? BLACK_CARDS.length + 1 : 5; // solo modda tüm kartlar gösterilir
 
   await rr().update({
     winner: winnerId,
@@ -808,13 +808,9 @@ async function nextRound() {
     const order = arr(r.order);
     const nextIdx = r.soloMode ? 0 : (r.czarIdx + 1) % order.length;
     const used = arr(r.usedBlacks).filter(Boolean);
-    const blackCard = r.soloMode
-      ? BLACK_CARDS[(r.round || 1) % BLACK_CARDS.length]
-      : (() => {
-          const available = BLACK_CARDS.filter(c => !used.includes(c.id));
-          const pool = available.length ? available : BLACK_CARDS;
-          return pool[0 | Math.random() * pool.length];
-        })();
+    const available = BLACK_CARDS.filter(c => !used.includes(c.id));
+    const pool = available.length ? available : BLACK_CARDS;
+    const blackCard = pool[0 | Math.random() * pool.length];
 
     const newHands = dealHands(blackCard, order);
     await rr().update({
@@ -881,7 +877,7 @@ function listenRoom() {
         await db.ref('rooms/' + roomCode).update({
           winner: winnerId, winnerName: wName,
           ['players/' + winnerId + '/score']: newScore,
-          state: newScore >= 5 ? 'over' : 'result',
+          state: newScore >= (r.soloMode ? BLACK_CARDS.length + 1 : 5) ? 'over' : 'result',
         });
       }, 1200);
     }
